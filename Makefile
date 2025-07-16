@@ -43,7 +43,7 @@ all: build
 build:
 	$(CARGO) build $(BUILD_FLAGS)
 
-install: build $(INSTALL_DIRS)
+install:
 ifeq ($(TARGET_OS),windows)
 	powershell -Command "New-Item -ItemType Directory -Force -Path '$(BIN_DIR)'"
 	powershell -Command "Copy-Item '$(BUILD_DIR)/$(EXECUTABLE)' '$(BIN_DIR)/$(EXECUTABLE)' -Force"
