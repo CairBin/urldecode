@@ -49,3 +49,20 @@ make install
 ```
 
 On the Windows system, the program is installed by default to `%LOCALAPPDATA%\urldecode\bin`. And On Linux or macOS, it will be installed to `/usr/local/bin/urldecode`.You may need to configure environment variables.
+
+## C Interface
+
+```C
+uintptr_t url_decode_c(const char *input, uintptr_t input_len, char *output, uintptr_t output_len);
+```
+
+The function is declared in the `include/urldecode.h`. You can add the libraries under `target/release` and the header file to your project after executing `make build` or `cargo build --release`.Please note that if using static library on certain platforms, some additional compilation parameters should be added to the command to link a few libraries which are provided by these platforms.
+
+For instance, on the Windows, if the compiler is MinGw64 gcc and you want to link static library for `test.c`
+
+```sh
+cargo build --release
+gcc test.c -L./target/release -static -lurldecode -lntdll -luserenv -lws2_32 -o a
+```
+
+tips: In order to compile the lib with MinGW64 instead of MSVC on Windows, you may need to modify rust toolchain.

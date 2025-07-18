@@ -1,3 +1,5 @@
+use std::ffi::{c_char, CStr};
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,6 +12,41 @@ pub enum UrlDecodeError {
     
     #[error("invalid UTF-8 sequence in decoded bytes")]
     InvalidUtf8(#[from] std::string::FromUtf8Error),
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn url_decode_c(
+    input: *const  c_char,
+    input_len: usize,
+    output: *mut c_char,
+    output_len: usize
+)->usize{
+    if input.is_null() || output.is_null(){
+        return 0;
+    }
+
+    let c_str = unsafe { CStr::from_ptr(input) };
+    let input_str = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return 0,
+    };
+    let input_slice = &input_str[..input_len.min(input_str.len())];
+    // url decode
+    let result = url_decode(input_slice);
+    if result.is_err(){
+        return 0;
+    }
+
+    let decoded = result.unwrap();
+    let bytes = decoded.as_bytes();
+    // leave empty character position
+    let copy_len = bytes.len().min(output_len.saturating_sub(1));
+    unsafe{
+        std::ptr::copy_nonoverlapping(bytes.as_ptr(), output as *mut u8, copy_len);
+        *output.add(copy_len) = 0;
+    }
+
+    return copy_len;
 }
 
 pub fn url_decode(input: &str) -> Result<String, UrlDecodeError> {
